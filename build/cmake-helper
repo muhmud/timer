@@ -1,0 +1,117 @@
+#!/usr/bin/python
+
+import os
+import subprocess
+import sys
+import xml.etree.ElementTree
+import shutil
+
+buildDirectory = os.path.abspath(os.path.dirname(__file__))
+currentDirectory = os.getcwd()
+buildType = ""
+
+def fixEclipseProject():
+    # Load the xml for the eclipse project
+    projectXmlFile = os.path.join(currentDirectory, '.project')
+    projectXml = xml.etree.ElementTree.parse(projectXmlFile)
+
+    # Fix the project name
+    projectName = projectXml.find('name').text;
+    projectXml.find('name').text = projectName[0:len(projectName)-12]
+
+    # Add filters
+    filtersXml = xml.etree.ElementTree.parse(os.path.join(buildDirectory, '.eclipse-filters.xml')).getroot()
+    projectXml.getroot().append(filtersXml)
+
+    # Save the resulting file
+    projectXml.write(projectXmlFile)
+    
+    return
+
+def writeDirLocals():
+    projectDirectory = os.path.join(buildDirectory, os.pardir)
+    dirLocalsFile = os.path.join(projectDirectory, '.dir-locals.el')
+    buildPath = os.path.join(buildDirectory, buildType.lower())
+    with open(dirLocalsFile, 'w') as f:
+        f.write('((nil . ((cmake-ide-build-dir . "' + buildPath + '"))))')
+
+def clearDirectory(path):
+    for item in os.listdir(path):
+        if os.path.isdir(item):
+            shutil.rmtree(item)
+        else:
+            if item != ".gitignore":
+                os.remove(item)
+
+commands = {
+    'cmake': { 'description': 'Runs cmake on the project for a debug build', 'execute' : ['cmake', '-DCMAKE_BUILD_TYPE=', '../../project'] },
+    
+    'conan' : { 'description': 'Performs a conan install', 'execute' : ['conan', 'install', '../../project'] },
+    
+    'eclipse': { 'description': 'Creates an eclipse project for the build', 'execute' : ['cmake', '-G',
+                         'Eclipse CDT4 - Unix Makefiles',
+                         '-DCMAKE_BUILD_TYPE=',
+                         '../../project'] },
+    
+    'eclipse-src': { 'description' : 'Creates an eclipse project for the source', 'execute' : ['cmake', '-G',
+                         'Eclipse CDT4 - Unix Makefiles',
+                         '-DCMAKE_BUILD_TYPE=',
+                         '-DCMAKE_ECLIPSE_GENERATE_SOURCE_PROJECT=TRUE',
+                         '../../project'] },
+
+    'clean': { 'description' : 'Clears a build directory', 'execute' : [] }
+}
+
+def executeCommand(command):
+    if command == 'clean':
+        clearDirectory(currentDirectory)
+    else:
+        # Insert the build type, if required
+        if command == 'cmake':
+            commands[command]['execute'][1] += buildType;
+        elif command == 'eclipse' or command == 'eclipse-src':
+            commands[command]['execute'][3] += buildType;
+
+        subprocess.call(commands[command]['execute'])
+
+        # If cmake was executed, re-create .dir-locals.el
+        if command == 'cmake':
+            writeDirLocals()
+        elif command == 'eclipse':
+            # Fix Eclipse project xml, if necessary
+            fixEclipseProject()
+
+if currentDirectory == os.path.join(buildDirectory, 'debug'):
+    buildType = "Debug"
+elif currentDirectory == os.path.join(buildDirectory, 'release'):
+    buildType = "Release"
+else:
+    print('This script must only be called from the debug or release build directories for this project')
+    exit()
+   
+if len(sys.argv) <= 1:
+    # Clean
+    executeCommand('clean')
+
+    # Conan install
+    if (os.path.exists(os.path.join(buildDirectory, '../../project/conanfile.txt'))):
+        executeCommand('conan')
+
+    # CMake (debug)
+    executeCommand('cmake')
+
+    exit()
+
+command = sys.argv[1];
+if command == 'help':
+    for command, data in commands.items():
+        print('%s    \t%s' % (command, data['description']))
+
+    exit()
+   
+if not command in commands:
+    print('Bad argument(s)')
+    exit()
+
+# We have a valid command
+executeCommand(command)
