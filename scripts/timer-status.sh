@@ -1,7 +1,6 @@
 #!/bin/bash
 
 TIMER=~/.timer/current
-TIMER_DIRECTORY=$(cat $TIMER)
 
 get_details() {  
   TIMER_STATUS=$(~/bin/timer --status -D "$TIMER_DIRECTORY")
@@ -11,6 +10,7 @@ get_details() {
 }
 
 if [[ -f $TIMER ]]; then
+  TIMER_DIRECTORY=$(cat $TIMER)
   get_details
   if [[ "$PROJECT" == "" ]]; then
     sleep 1
