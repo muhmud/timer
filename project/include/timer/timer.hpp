@@ -24,6 +24,7 @@ namespace timer {
     void pause();
     void resume(const std::string &task);
     void stop();
+    void unstop();
 
     // Returns the current status of the timer as JSON
     Json::Value status();

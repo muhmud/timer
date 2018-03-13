@@ -119,13 +119,38 @@ namespace timer {
     timerState.checkTransitionTo(TimerStatus::Value::STOPPED);
 
     // Record the time
-    auto endDateTime = util::datetime::now();
+    auto startDateTime = util::datetime::now(), endDateTime = startDateTime;
 
     // Add a new log entry
-    m_timerDB.addTimerLog(TimerLog(latestTimerLog.timer_datetime,
-                                   timerState.timerWorkDone(endDateTime),
-                                   TimerStatus::Value::STOPPED, latestTimerLog.start_datetime,
-                                   endDateTime, latestTimerLog.task));
+    m_timerDB.addTimerLog(TimerLog(
+        latestTimerLog.timer_datetime,
+        latestTimerLog.status == TimerStatus::Value::RUNNING ? timerState.timerWorkDone(endDateTime)
+                                                             : latestTimerLog.timer_work_done,
+        TimerStatus::Value::STOPPED,
+        latestTimerLog.status == TimerStatus::Value::RUNNING ? latestTimerLog.start_datetime
+                                                             : startDateTime,
+        endDateTime, latestTimerLog.task));
+  }
+
+  void Timer::unstop() {
+    // Check if the state transition is valid
+    TimerLog const latestTimerLog = m_timerDB.latestTimerLog();
+
+    if (latestTimerLog.status != TimerStatus::Value::STOPPED) {
+      throw std::runtime_error("invalid timer status (timer must be stopped)");
+    }
+
+    // Remove the latest log
+    m_timerDB.removeTimerLog(latestTimerLog.id);
+
+    // If the previous entry was a paused one then there's nothing more to do;
+    // otherwise, add a paused entry with the details from the stopped one
+    TimerLog const newLatestTimerLog = m_timerDB.latestTimerLog();
+    if (newLatestTimerLog.status != TimerStatus::Value::PAUSED) {
+      m_timerDB.addTimerLog(TimerLog(latestTimerLog.timer_datetime, latestTimerLog.timer_work_done,
+                                     TimerStatus::Value::PAUSED, latestTimerLog.start_datetime,
+                                     latestTimerLog.end_datetime, latestTimerLog.task));
+    }
   }
 
   Json::Value Timer::status() {

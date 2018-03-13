@@ -8,7 +8,7 @@ namespace timer {
 
   struct TimerCommand {
     // Enum containing timer commands
-    enum class Value { invalid, go, pause, resume, stop, report, status };
+    enum class Value { invalid, go, pause, resume, stop, unstop, report, status };
 
     // Map of timer commands to CommandLineArg objects
     static std::map<Value, util::cmd::CommandLineArg<Value>> const values;

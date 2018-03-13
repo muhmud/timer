@@ -33,11 +33,12 @@ namespace timer {
            CommandLineArg<Value>(Value::resume, "resume", "r",
                                  "resumes the timer with the last used task or a new task")},
           {Value::stop, CommandLineArg<Value>(Value::stop, "stop", "s", "stops the timer")},
+          {Value::unstop, CommandLineArg<Value>(Value::unstop, "unstop", "u", "unstops the timer")},
           {Value::report,
            CommandLineArg<Value>(Value::report, "report", "e", options::value<std::string>(),
                                  "generates a report specified by name [date, task]")},
           {Value::status,
-           CommandLineArg<Value>(Value::status, "status", "u", "returns the status of the timer")}};
+           CommandLineArg<Value>(Value::status, "status", "w", "returns the status of the timer")}};
 
   void TimerParameter::add(options::options_description_easy_init &builder) {
     for (const auto &command : values) {
@@ -128,6 +129,12 @@ namespace timer {
       case TimerCommand::Value::stop: {
         // Stops the timer
         timer.stop();
+        break;
+      }
+
+      case TimerCommand::Value::unstop: {
+        // Unstops the timer
+        timer.unstop();
         break;
       }
 
