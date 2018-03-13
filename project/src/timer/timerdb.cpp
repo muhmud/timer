@@ -8,6 +8,7 @@
 #define INSERT_TIMER_LOG                                                                           \
   "insert into timer_log (timer_datetime, timer_work_done, status, "                               \
   "start_datetime, end_datetime, task) values (?, ?, ?, ?, ?, ?);"
+#define DELETE_TIMER_LOG "delete from timer_log where id = ?"
 #define SELECT_LATEST_TIMER_LOG                                                                    \
   "select id, timer_datetime, timer_work_done, status, start_datetime, "                           \
   "       end_datetime, task "                                                                     \
@@ -39,6 +40,17 @@ namespace timer {
 
     // Execute
     insert();
+  }
+
+  void TimerDB::removeTimerLog(int id) {
+    // Create a prepared statement
+    sqlite::execute deleteSql(*m_con, DELETE_TIMER_LOG);
+
+    // Set parameters
+    deleteSql % id;
+
+    // Execute
+    deleteSql();
   }
 
   TimerLog TimerDB::latestTimerLog() {

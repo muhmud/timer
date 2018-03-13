@@ -23,6 +23,7 @@ namespace timer {
 
     // Timer log management
     void addTimerLog(const TimerLog &timerLog);
+    void removeTimerLog(int id);
     TimerLog latestTimerLog();
 
     // Reporting functions
