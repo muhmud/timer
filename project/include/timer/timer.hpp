@@ -38,6 +38,10 @@ namespace timer {
     std::unique_ptr<std::map<time_t, std::chrono::seconds>>
     totalWorkDoneByDate(time_t start_datetime, time_t end_datetime);
 
+    // Generic function to process timer logs between a date range
+    void processTimerLogs(time_t start_datetime, time_t end_datetime,
+                          std::function<void(const TimerLog &)> processor);
+
     // Factory methods
     static Timer create(const boost::filesystem::path &timerDatabaseFilePath);
 

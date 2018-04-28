@@ -36,7 +36,7 @@ namespace timer {
           {Value::unstop, CommandLineArg<Value>(Value::unstop, "unstop", "u", "unstops the timer")},
           {Value::report,
            CommandLineArg<Value>(Value::report, "report", "e", options::value<std::string>(),
-                                 "generates a report specified by name [date, task]")},
+                                 "generates a report specified by name [date, task, log]")},
           {Value::status,
            CommandLineArg<Value>(Value::status, "status", "w", "returns the status of the timer")}};
 
@@ -141,8 +141,8 @@ namespace timer {
       case TimerCommand::Value::report: {
         // Get the name of the report and verify that it is valid
         const auto report = timerCommand.arg(vm).asNonEmptyString();
-        if (report != "date" && report != "task") {
-          throw std::logic_error("invalid report (should one of [date, task])");
+        if (report != "date" && report != "task" && report != "log") {
+          throw std::logic_error("invalid report (should one of [date, task, log])");
         }
 
         // Create arg objects for the all date range parameters
@@ -170,20 +170,38 @@ namespace timer {
         // Produce the report
         if (report == "date") {
           const auto data = *timer.totalWorkDoneByDate(start, end);
-          for (const auto & [ date, value ] : data) {
+          for (const auto &[date, value] : data) {
             std::cout << util::datetime::format(date, "%Y-%m-%d (%H:%M:%S %z)") << '\t'
                       << TimerClock::format(value) << " (" << std::fixed << std::setprecision(2)
                       << TimerClock::toHours(value) << ")" << '\n';
           }
-        } else {
+        } else if (report == "task") {
           const auto data = *timer.totalWorkDoneByTask(start, end);
-          for (const auto & [ task, value ] : data) {
+          for (const auto &[task, value] : data) {
             std::cout << (task.length() > MAX_TASK_LENGTH
                               ? task.substr(0, MAX_TASK_LENGTH - 4) + " ..."
                               : task + std::string(MAX_TASK_LENGTH - task.length(), ' '))
                       << "\t" << TimerClock::format(value) << " (" << std::fixed
                       << std::setprecision(2) << TimerClock::toHours(value) << ")" << '\n';
           }
+        } else {
+          // Output header
+          std::cout << "timer datetime\t\t\twork done\tstatus\tstart\t\t\tend\t\t\ttask\n";
+          timer.processTimerLogs(start, end, [&](const TimerLog &timerLog) {
+            std::cout << util::datetime::format(timerLog.timer_datetime, "%Y-%m-%d (%H:%M:%S %z)")
+                      << '\t' << TimerClock::format(std::chrono::seconds(timerLog.timer_work_done))
+                      << '\t' << TimerStatus::toString(timerLog.status) << '\t'
+                      << util::datetime::format(timerLog.start_datetime, "%Y-%m-%d %H:%M:%S")
+                      << "\t"
+                      << (timerLog.end_datetime == TimerClock::NULL_TIME
+                              ? "\t\t"
+                              : util::datetime::format(timerLog.end_datetime, "%Y-%m-%d %H:%M:%S"))
+                      << "\t"
+                      << (timerLog.task.length() > (MAX_TASK_LENGTH / 2)
+                              ? timerLog.task.substr(0, (MAX_TASK_LENGTH / 2) - 4) + " ..."
+                              : timerLog.task)
+                      << '\n';
+          });
         }
 
         break;

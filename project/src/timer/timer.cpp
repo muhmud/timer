@@ -244,6 +244,11 @@ namespace timer {
     return workDoneByDate;
   }
 
+  void Timer::processTimerLogs(time_t start_datetime, time_t end_datetime,
+                               std::function<void(const TimerLog &)> processor) {
+    m_timerDB.queryTimerLog(start_datetime, end_datetime, processor);
+  }
+
   Timer Timer::create(const boost::filesystem::path &timerDatabaseFilePath) {
     return Timer(
         timerDatabaseFilePath,
