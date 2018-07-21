@@ -20,8 +20,8 @@ namespace timer {
     // Convert seconds to hours
     static float toHours(std::chrono::seconds seconds);
 
-    // Parse a date in %Y-%m-%d format (throws for bad values)
-    static time_t parseDate(const std::string &dateTime);
+    // Parse a local datetime in %Y-%m-%dT%H:%M:%S format (throws for bad values)
+    static time_t parseLocalDateTime(const std::string &dateTime);
 
     // Parse a month, and optionally year from a string (throws for bad values)
     static time_t parseMonthYear(const std::string &dateTime);

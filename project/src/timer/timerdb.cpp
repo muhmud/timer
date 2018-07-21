@@ -1,6 +1,7 @@
 
 #include <timer/timerclock.hpp>
 #include <timer/timerdb.hpp>
+#include <util/datetime.hpp>
 
 #include <sqlite/execute.hpp>
 
@@ -16,8 +17,8 @@
 #define SELECT_QUERY_TIMER_LOG                                                                     \
   "select id, timer_datetime, timer_work_done, status, start_datetime, "                           \
   "       end_datetime, task "                                                                     \
-  "from timer_log where timer_datetime between ? and ? order by "                                  \
-  "start_datetime;"
+  "from timer_log where timer_datetime >= ? and timer_datetime < ? "                               \
+  "order by start_datetime;"
 
 namespace timer {
   TimerLog toTimerLog(boost::shared_ptr<sqlite::result> result) {

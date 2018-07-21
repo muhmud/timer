@@ -5,14 +5,17 @@
 
 namespace util {
   namespace datetime {
+    // Returns the local time's UTC offset
+    boost::posix_time::time_duration getUtcOffset();
+
     // Create a locale for date/time format parsing
     std::locale toLocale(const std::string &format);
 
-    // Parse a datetime from a string value using the specified locale
-    boost::posix_time::ptime parse(const std::string &value, const std::locale &locale);
+    // Parse a local datetime from a string value using the specified locale
+    boost::posix_time::ptime parseLocal(const std::string &value, const std::locale &locale);
 
-    // Parse a datetime from a string value where the specified format is expected
-    boost::posix_time::ptime parse(const std::string &value, const std::string &format);
+    // Parse a local datetime from a string value where the specified format is expected
+    boost::posix_time::ptime parseLocal(const std::string &value, const std::string &format);
 
     // Format a datetime as a string
     std::string format(time_t dateTime, const std::string &format);
@@ -29,5 +32,8 @@ namespace util {
 
     // Calculate difference in seconds between two times
     std::chrono::seconds duration(time_t start, time_t end);
+
+    // Add days to a datetime
+    time_t addDays(const time_t date, const int days);
   } // namespace datetime
 } // namespace util

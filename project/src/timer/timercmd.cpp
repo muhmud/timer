@@ -162,10 +162,11 @@ namespace timer {
 
         // Process the date parameters
         const auto start = startDateArg.exists()
-                               ? TimerClock::parseDate(startDateArg.asNonEmptyString())
+                               ? TimerClock::parseLocalDateTime(startDateArg.asNonEmptyString())
                                : TimerClock::parseMonthYear(monthArg.value<std::string>());
-        const auto end = endDateArg.exists() ? TimerClock::parseDate(endDateArg.asNonEmptyString())
-                                             : TimerClock::endOfMonth(start);
+        const auto end = endDateArg.exists()
+                             ? TimerClock::parseLocalDateTime(endDateArg.asNonEmptyString())
+                             : TimerClock::endOfMonth(start);
 
         // Produce the report
         if (report == "date") {
@@ -177,13 +178,22 @@ namespace timer {
           }
         } else if (report == "task") {
           const auto data = *timer.totalWorkDoneByTask(start, end);
+          std::chrono::seconds total(0);
+
           for (const auto &[task, value] : data) {
             std::cout << (task.length() > MAX_TASK_LENGTH
                               ? task.substr(0, MAX_TASK_LENGTH - 4) + " ..."
                               : task + std::string(MAX_TASK_LENGTH - task.length(), ' '))
                       << "\t" << TimerClock::format(value) << " (" << std::fixed
                       << std::setprecision(2) << TimerClock::toHours(value) << ")" << '\n';
+
+            // Aggregate total
+            total += value;
           }
+
+          std::cout << "\nTotal" << std::string(MAX_TASK_LENGTH - 5, ' ') << "\t"
+                    << TimerClock::format(total) << " (" << std::fixed << std::setprecision(2)
+                    << TimerClock::toHours(total) << ")" << '\n';
         } else {
           // Output header
           std::cout << "timer datetime\t\t\twork done\tstatus\tstart\t\t\tend\t\t\ttask\n";

@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include <timer/timerclock.hpp>
 #include <util/datetime.hpp>
 
@@ -34,10 +35,10 @@ namespace timer {
     return ((float)seconds.count()) / 60 / 60;
   }
 
-  time_t TimerClock::parseDate(const std::string &dateTime) {
-    static auto const locale = util::datetime::toLocale("%Y-%m-%d");
+  time_t TimerClock::parseLocalDateTime(const std::string &dateTime) {
+    static auto const locale = util::datetime::toLocale("%Y-%m-%dT%H:%M:%S");
 
-    auto result = util::datetime::parse(dateTime, locale);
+    auto result = util::datetime::parseLocal(dateTime, locale);
 
     if (result.is_not_a_date_time()) {
       throw std::runtime_error("invalid date value");
@@ -49,7 +50,7 @@ namespace timer {
   time_t TimerClock::parseMonthYear(const std::string &dateTime) {
     static auto const locale = util::datetime::toLocale("%b %Y");
 
-    auto result = util::datetime::parse(dateTime, locale);
+    auto result = util::datetime::parseLocal(dateTime, locale);
 
     if (result.is_not_a_date_time()) {
       auto const today = boost::gregorian::day_clock::local_day();
