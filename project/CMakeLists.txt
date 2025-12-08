@@ -1,5 +1,5 @@
 project(timer_project)
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5.0)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib)
@@ -22,7 +22,6 @@ set(SRC_FILES src/timer/timer.cpp
 
 set (LIBS vsqlitepp
           boost_filesystem
-          boost_system
           boost_program_options
           boost_date_time
           jsoncpp)
